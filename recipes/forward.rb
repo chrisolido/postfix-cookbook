@@ -12,7 +12,9 @@ end
 # Postfix configuration file
 template "/etc/postfix/main.cf" do
   source "postfix_main.cf.erb"
-  mode "0600"
+  owner "postfix"
+  group "postfix"
+  mode "0644"
   variables({
               :hostname => node[:postfix][:smtp_host],
             })
@@ -22,6 +24,8 @@ end
 # Postfix user info file
 template "/etc/postfix/sasl_passwd" do
   source "postfix_sasl_passwd.erb"
+  owner "postfix"
+  group "postfix"
   mode "0600"
   variables({
               :hostname => node[:postfix][:smtp_host],
@@ -37,7 +41,9 @@ script "compile_sasl_passwd" do
   user "root"
   cwd "/etc/postfix"
   code <<-EOH
-      postmap hash:/etc/postfix/sasl_passwd
+      chown postfix: /etc/postfix && \
+      postmap hash:/etc/postfix/sasl_passwd && \
+      chown postfix: /etc/postfix/sasl_passwd.db
     EOH
   notifies :restart, resources(:service => "postfix")
 end
